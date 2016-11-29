@@ -1,0 +1,2 @@
+# CCTyping
+Developed for the Cedar Crest High School Business Department to replace an old, inefficient, end-of-life keyboarding software. The program was designed to teach freshmen how to type. The old software required the teacher to hand grade assignments and required frequent printing, which wasted paper. This software grades automatically and doesn't require printing, as well as providing an updated user interface. 
