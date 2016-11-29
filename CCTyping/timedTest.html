@@ -1,0 +1,283 @@
+<html>
+	<head>
+		<title>Timed Writing</title>
+		<script src="//www.parsecdn.com/js/parse-1.6.12.min.js"></script>
+		<script>Parse.initialize("iWCInI89F99p3XseHQ1fllKeNQyTQA6KT57o38lf", "UNIC0gr6yp3K7xlX4z52Doe5dh0j0dzaJpKqwGqG");</script>
+		<link rel="stylesheet" href="theme.css">
+		<script src="grade.js"></script>
+		<script src="jquery-2.1.4.min.js"></script>
+		<style>
+			p {
+				width:100%;
+				font-size: 32pt;
+				text-align:left;
+			} textarea {
+				font-size: 32pt;
+			} #lessonText1 {
+				color: #000000;
+				background-color:#FFFFFF;
+			} #theirText1 {
+				color: #009933;
+				background-color:#FFFFFF;
+			}
+		</style>
+	</head>
+	
+	<body>
+		<div style="width:100%;height:100%;">
+			<p style="text-align:center;">Type the following sentences as they appear.</p>
+			<p id="lessonText1" style="margin-left:150px;">Timed Writing Line 1</p>
+			<p id="theirText1" style="margin-left:150px;">Your typing will appear here.</p>
+			<textarea id="theirTyping" onkeyup="update()" style="width:100%;height:10%;"></textarea>
+			<div style="width:100%;">
+				<div id="gwamDiv" style="width:50%;height:100%;float:right;">
+					<p style="display:inline;width:50%;float:left;text-align:right;">GWAM:</p>
+					<p id="gwamPara" style="display:inline;width:50%;float:right;">0</p>
+				</div>
+				<div style="width:50%;height:100%;float:left;">
+					<p id="timer" style="width:100%;text-align:center;">3:00</p>
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			for(z = 0; z < 1; z++) {
+				var timer;
+				var absStart = 0;
+				var absEnd = 0;
+				var arrIndex = 0;
+				var timeLeft = 180;
+				var timeOut = false;
+				var testDone = false;
+				var loadRunning = false;
+				var currentLesson = "";
+				var totalWords = "";
+				var position = 0;
+				var writingLines = [];
+				var queue = [];
+				var totalGwam = 0;
+				var totalAccuracy = 0;
+				var totalTyped = [];
+				var subCount = -1;
+				var start = 0;
+				var end = 0;
+				var maxErrors = 1;
+				var errors = 0;
+				var lastTyped = "";
+				var updateFinished = true;
+				var firstKey = true;
+				var lessonNum = parseInt(localStorage.getItem("lessonNum"));
+				var lPara1 = document.getElementById("lessonText1");
+				var tPara1 = document.getElementById("theirText1");
+				var gPara = document.getElementById("gwamPara");
+				var tArea = document.getElementById("theirTyping");
+				var gDiv = document.getElementById("gwamDiv");
+				var timerPara = document.getElementById("timer");
+			}
+		
+			//console.log(lDistance("AB CDE", "ABCDE"));
+			var lessons = [];
+			var lessonClass = Parse.Object.extend("TimedWritings");
+			var query = new Parse.Query(lessonClass);
+			query.limit(1000);
+			query.find().then(function(results) {
+				//console.log(results.length);
+				for(i = 0; i < results.length; i++) {
+					//console.log(lessonNum);
+					if(results[i].id == localStorage.getItem("TimedWriting")) {
+						currentLesson = results[i].get("Content");
+						position = 1;
+						//if(results[i].get("Name"))
+						maxErrors = results[i].get("Time");
+						timeLeft = results[i].get("Time") * 60;
+						arrIndex = results[i].get("Index");
+						writingLines = currentLesson.split("::");
+						timerPara.innerHTML = "" + results[i].get("Time") + ":00";
+					}
+				}
+				load();
+			});
+			
+			function load() {
+				//console.log("load");
+				loadRunning = true;
+				justChanged = true;
+				console.log("Errors: " + errors);
+				subCount++;
+				tArea.value = "";
+				position = 0;
+				console.log(subCount);
+				absEnd = new Date().getTime();
+				if(testDone && false) {
+					
+				}
+				else if(timeOut && !firstKey) {
+					testDone = true;
+					var end = new Date().getTime();
+					var gwam = 0.0;
+					var words = writingLines[subCount-1].length / 5;
+					var time = ((end-start)/60000);
+					gwam = words / time;
+					accuracy = lDistance(tPara1.innerHTML, writingLines[subCount-1].substring(0, tPara1.innerHTML.length));
+					console.log("aaaa" + tPara1.innerHTML + "   " + writingLines[subCount-1].substring(0, tPara1.innerHTML.length));
+					errors += accuracy;
+					totalTyped.push(tPara1.innerHTML);
+					totalWords = totalWords + writingLines[subCount-1].substring(0, tPara1.innerHTML.length);
+					var absEnd = new Date().getTime();
+					gwam = 0.0;
+					var theirTotal = "";
+					for(i = 0; i < totalTyped.length; i++) {
+						theirTotal = theirTotal + totalTyped[i];
+					}
+					var words = totalWords.length / 5;
+					var time = ((absEnd-absStart)/60000);
+					gwam = words / time;
+					console.log(words, time, gwam);
+					accuracy = lDistance(totalWords, theirTotal);
+					gDiv.style.display = "block";
+					gPara.innerHTML = Math.round(gwam);
+					var lessonClass = Parse.Object.extend("Students");
+					var query = new Parse.Query(lessonClass);
+					query.equalTo("username", localStorage.getItem("username"));
+					query.find().then(function(results) {
+						var result = results[0];
+						var writings = result.get("TimedWritings").split("::");
+						if(accuracy <= maxErrors) {
+							writings[arrIndex] = Math.round(gwam) + "," + accuracy;	
+						} else {
+							//writings[arrIndex] = "0,0";
+						}
+						var s = "";
+						for(i = 0; i < writings.length; i++) {
+							s = s + writings[i] + "::";
+						}
+						console.log(s);
+						result.set("TimedWritings", s);
+						result.save();
+						if(accuracy <= maxErrors) {
+							alert("You have successfully completed this test.");
+						} else {
+							alert("You have made too many errors and will have to redo this test.");
+						}
+						window.location = "home.html";
+					});
+				}
+				else if(subCount < writingLines.length) {				
+					if(start != 0) {
+						var end = new Date().getTime();
+						var gwam = 0.0;
+						var words = writingLines[subCount-1].length / 5;
+						var time = ((end-start)/60000);
+						gwam = words / time;
+						accuracy = lDistance(tPara1.innerHTML, writingLines[subCount-1]);
+						errors += accuracy;
+						gDiv.style.display = "block";
+						gPara.innerHTML = Math.round(gwam);	
+						totalTyped.push(tPara1.innerHTML);
+						totalWords = totalWords + writingLines[subCount-1];
+						//console.log(gwam, Math.round(gwam));
+					}
+					if(errors > maxErrors) {
+						alert("You made too many errors and will have to redo this Timed Writing.");
+						window.location = "home.html";
+						return;
+					}
+					lPara1.innerHTML = writingLines[subCount];
+					tPara1.innerHTML = "Your typing will appear here.";
+					tArea.innerHTML = "";
+					start = new Date().getTime();
+				}
+				else {
+					var end = new Date().getTime();
+					var gwam = 0.0;
+					var words = writingLines[writingLines.length-1].length / 5;
+					var time = ((end-start)/60000);
+					gwam = words / time;
+					accuracy = lDistance(tPara1.innerHTML, writingLines[writingLines.length-1]);
+					errors += accuracy;
+					gDiv.style.display = "block";
+					gPara.innerHTML = Math.round(gwam);	
+					totalTyped.push(tPara1.innerHTML);
+					totalWords = totalWords + writingLines[writingLines.length-1];
+					if(errors > maxErrors) {
+						alert("You made too many errors and will have to redo this Timed Writing.");
+						window.location = "home.html";
+						return;
+					}
+					subCount = 0;
+					lPara1.innerHTML = writingLines[subCount];
+					tPara1.innerHTML = "Your typing will appear here.";
+					tArea.innerHTML = "";
+					start = new Date().getTime();
+				}
+				loadRunning = false;
+			}
+			
+			function update() {
+				//console.log("update");
+				if(tArea.value.length > 0) {
+					if(firstKey) {
+						absStart = new Date().getTime();
+						start = new Date().getTime();
+						timer = setInterval(function() {
+							timeLeft -= 1;
+							var s = timeLeft % 60;
+							var m = (timeLeft-s) / 60;
+							//console.log(m,s);
+							if(m <= 0 && s <= 0) {
+								timeOut = true;
+								load();
+								clear();
+							}
+							var timeString = "" + m + ":";
+							if(s < 10) {timeString = timeString + "0";}
+							timeString = timeString + s;
+							timerPara.innerHTML = timeString;
+						}, 1000);	
+						firstKey = false;
+					}
+					if(tPara1.innerHTML == "Your typing will appear here.") {
+						tPara1.innerHTML = "";
+					}
+					queue.push(tArea.value.substring(0,1));
+					//console.log(tArea.value);
+					if(tArea.value.length == 1) {
+						tArea.value = "";
+					} else {
+						tArea.value = tArea.value.substring(1);
+					}
+				}	
+			}
+			
+			function clear() {
+				clearInterval(timer);
+			}
+			
+			var interval = setInterval(function() {
+				if(queue.length > 0 && updateFinished && tPara1.innerHTML != "Your typing will appear here.") {
+					//console.log("ran");
+					updateFinished = false;
+					var one = queue.shift();
+					//console.log(one + "," + queue.length);
+					if(subCount < writingLines.length) {
+						position += 1;
+						tPara1.innerHTML = tPara1.innerHTML + one;
+						var length = tPara1.innerHTML.length;
+						if(length >= writingLines[subCount].length || tPara1.innerHTML.substring(length-5) == writingLines[subCount].substring(writingLines[subCount].length-5)) {
+							load();
+						}	
+					}
+					updateFinished = true;
+				}
+			}, 100);	
+			
+			$(document).ready(function() {
+				document.getElementById("theirTyping").focus();
+			   	$(document).on("click", function(){
+					//console.log("set");
+				    document.getElementById("theirTyping").focus();
+				});
+			});
+		</script>
+	</body>
+</html>

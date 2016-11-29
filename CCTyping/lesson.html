@@ -1,0 +1,326 @@
+<html>
+	<head>
+		<title>Lesson</title>
+		<script src="//www.parsecdn.com/js/parse-1.6.12.min.js"></script>
+		<script>Parse.initialize("iWCInI89F99p3XseHQ1fllKeNQyTQA6KT57o38lf", "UNIC0gr6yp3K7xlX4z52Doe5dh0j0dzaJpKqwGqG");</script>
+		<link rel="stylesheet" href="theme.css">
+		<script src="grade.js"></script>
+		<script src="jquery-2.1.4.min.js"></script>
+		<style>
+			p {
+				width:100%;
+				font-size: 32pt;
+				text-align:left;
+			} textarea {
+				font-size: 32pt;
+			}
+		</style>
+	</head>
+	
+	<body>
+		<div style="width:100%;height:100%;">
+			<p style="text-align:center;">Type the following sentences as they appear.</p>
+			<p id="lessonText" style="margin-left:150px;">Lesson will appear here.</p>
+			<p id="theirText" style="margin-left:150px;">Your typing will appear here.</p>
+			<textarea id="theirTyping" onkeyup="update()" style="width:100%;height:10%;"></textarea>
+			<div id="gwamDiv" style="display:none;">
+				<p id="gwamPara" style="display:inline;width:50%;float:left;text-align:center;">Errors:0</p>
+				<p id="errorPara" style="display:inline;width:50%;float:right;text-align:center;">GWAM:0</p>
+			</div>
+		</div>
+		
+		<script>
+			for(z = 0; z < 1; z++) {
+				var maxErrors = 5;
+				var currentLesson = "";
+				var subLessons = [];
+				var buildskill = [];
+				var queue = [];
+				var gwams = [];
+				var accuracies = [];
+				var errors = 0;
+				var position = 0;
+				var subCount = -1;
+				var start = 0;
+				var end = 0;
+				var lastTyped = "";
+				var updateFinished = true;
+				var first = true;
+				var lessonNum = parseInt(localStorage.getItem("lessonNum"));
+				var lPara = document.getElementById("lessonText");
+				var tPara = document.getElementById("theirText");
+				var gPara = document.getElementById("gwamPara");
+				var ePara = document.getElementById("errorPara");
+				var tArea = document.getElementById("theirTyping");
+				var gDiv = document.getElementById("gwamDiv");
+			}
+			
+			if(tArea.addEventListener) {
+		        tArea.addEventListener('keydown',this.keyHandler,false);
+		    } else if(tArea.attachEvent) {
+		        tArea.attachEvent('onkeydown',this.keyHandler);
+		    }
+		
+		    function keyHandler(e) {
+		        var TABKEY = 9;
+		        if(e.keyCode == TABKEY) {
+		            this.value += "[TAB]";
+		            if(e.preventDefault) {
+		                e.preventDefault();
+		            }
+		            return false;
+		        } else if(e.keyCode == 13) {
+		        	load();
+		        }
+		    }
+			
+			var lessons = [];
+			var lessonClass = Parse.Object.extend("Lessons");
+			var query = new Parse.Query(lessonClass);
+			query.limit(1000);
+			query.find().then(function(results) {
+				//console.log(results.length);
+				for(i = 0; i < results.length; i++) {
+					//console.log(lessonNum);
+					if(results[i].get("Number") == lessonNum) {
+						currentLesson = results[i].get("Content");
+						subLessons = currentLesson.split("::");
+						buildskill = results[i].get("BuildSkill").split("::");
+						//console.log(subLessons.length + "," + subLessons[0]);
+					}
+				}
+				for(i = 0; i < subLessons.length; i++) {
+					subLessons[i] = subLessons[i];
+					if(i < buildskill.length) {
+						buildskill[i] = buildskill[i];
+					}
+				}
+				var aClass = Parse.Object.extend("Students");
+				var aquery = new Parse.Query(aClass);
+				aquery.limit(1000);
+				aquery.equalTo("username", localStorage.getItem("username"));
+				aquery.find().then(function(results) {
+					var count = parseInt(((results[0].get("Progress").split("::"))[lessonNum-1].split(","))[0]);
+					console.log(count);
+					subCount = count - 1;
+					var bClass = Parse.Object.extend("Classes");
+					var bquery = new Parse.Query(bClass);
+					bquery.limit(1000);
+					bquery.equalTo("objectId", localStorage.getItem("cID"));
+					bquery.find().then(function(results) {
+						var result = results[0];
+						var prefs = result.get("Preferences");
+						maxErrors = parseInt(prefs.split(",")[0]);
+						load();
+					});
+				});
+			});
+			
+			function load() {
+				console.log("load");
+				var length = tPara.innerHTML.length;
+				console.log(subCount);
+				if(subCount < subLessons.length && !first && length < subLessons[subCount].length) {
+					return;
+				}
+				first = false;
+				justChanged = true;
+				subCount++;
+				tArea.value = "";
+				position = 0;
+				console.log(subCount);
+				if(subCount < 0) {
+					if(window.confirm("You have already completed this lesson. If you proceed, you will have to start this lesson over.")) {
+						var lessonClass = Parse.Object.extend("Students");
+						var query = new Parse.Query(lessonClass);
+						query.equalTo("username", localStorage.getItem("username"));
+						query.find().then(function(results) {
+							var progress = results[0].get("Progress").split("::");
+							progress[lessonNum-1] = "0,0,0";
+							var s = "";
+							for(i = 0; i < 40; i++) {
+								s = s + progress[i] + "::";
+							}
+							s = s.substring(0,s.length-2);
+							results[0].set("Progress", s);
+							results[0].save();
+							subCount = -1;
+							load();
+						});
+					} else {
+						window.location = "home.html";
+					}
+				}
+				if(subCount == subLessons.length) {
+					alert("You are starting the Build Skill sections. Your GWAM and accuracy will be recorded");
+					console.log(subCount, subLessons.length, buildskill.length, start);
+				}
+				if(subCount < subLessons.length) {
+					lPara.innerHTML = subLessons[subCount];
+					tPara.innerHTML = "Your typing will appear here.";
+					tArea.innerHTML = "";
+					var lessonClass = Parse.Object.extend("Students");
+					var query = new Parse.Query(lessonClass);
+					query.equalTo("username", localStorage.getItem("username"));
+					query.find().then(function(results) {
+						var result = results[0];
+						var progress = result.get("Progress").split("::");
+						progress[lessonNum-1] = subCount + ",0,0";
+						var s = "";
+						for(i = 0; i < 40; i++) {
+							s = s + progress[i] + "::";
+						}
+						s = s.substring(0,s.length-2);
+						result.set("Progress", s);
+						result.save();
+					});
+				}
+				else if((subCount-subLessons.length) < buildskill.length){
+					if(errors >= maxErrors) {
+						alert("You made too many errors and will have to redo this Build Skill section.");
+						return;
+					}
+					if(start != 0) {
+						//console.log("gwam");
+						var end = new Date().getTime();
+						var gwam = 0.0;
+						var words = buildskill[subCount-subLessons.length-1].length / 5;
+						var time = ((end-start)/60000);
+						gwam = words / time;
+						accuracy = lDistance(tPara.innerHTML, buildskill[subCount-subLessons.length-1]);
+						//console.log(tPara.innerHTML.length, buildskill[subCount-subLessons.length-1].length, accuracy);
+						errors += accuracy;
+						gwams.push(Math.round(gwam));
+						accuracies.push(accuracy);
+						gDiv.style.display = "block";
+						gPara.innerHTML = "GWAM:" + Math.round(gwam).toString();
+						ePara.innerHTML = "Errors:" + errors.toString();
+						//console.log(words, time);
+						//console.log(start,end,gwam,accuracy);
+					}
+					lPara.innerHTML = buildskill[subCount-subLessons.length];
+					tPara.innerHTML = "Your typing will appear here.";
+					tArea.innerHTML = "";
+				}
+				else {
+					var end = new Date().getTime();
+					var gwam = 0.0;
+					var words = buildskill[subCount-subLessons.length-1].length / 5;
+					var time = ((end-start)/60000);
+					gwam = words / time;
+					accuracy = lDistance(tPara.innerHTML, buildskill[subCount-subLessons.length-1]);
+					errors += accuracy;
+					gwams.push(Math.round(gwam));
+					accuracies.push(accuracy);
+					gDiv.style.display = "block";
+					gPara.innerHTML = "GWAM:" + Math.round(gwam);
+					var lessonClass = Parse.Object.extend("Students");
+					var query = new Parse.Query(lessonClass);
+					query.equalTo("username", localStorage.getItem("username"));
+					query.find().then(function(results) {
+						var result = results[0];
+						var index = 0;
+						var max = 0;
+						for(i = 0; i < gwams.length; i++) {
+							if(gwams[i] > max) {index = i;max = gwams[i];}			
+						}
+						var bestG = gwams.splice(index,1);
+						var bestA = errors;
+						gwam = bestG;
+						accuracy = bestA;
+						console.log(result);
+						var progress = result.get("Progress").split("::");
+						if(bestA < maxErrors) {
+							progress[lessonNum-1] = "-1," + bestG + "," + bestA;
+						} else {
+							progress[lessonNum-1] = (subLessons.length-1).toString() + "," + bestG + "," + bestA;	
+						}
+						var s = "";
+						for(i = 0; i < 40; i++) {
+							s = s + progress[i] + "::";
+						}
+						s = s.substring(0,s.length-2);
+						result.set("Progress", s);
+						result.save();
+					});
+					if(errors < maxErrors) {
+						alert("You have successfully completed this lesson. GWAM- " + Math.round(gwam) + ". Errors- " + errors + ".");	
+					}
+					window.location = "home.html";
+				}
+			}
+			
+			function update() {
+				//console.log("update");
+				if(tArea.value.length > 0) {
+					if(tArea.value.substring(0,1) == "\n") {
+						tArea.value = tArea.value.substring(1);
+						console.log("enter");
+						return;
+					}
+					if(subCount >= subLessons.length && position == 0) {
+						//console.log("start");
+						start = new Date().getTime();
+					}
+					if(tPara.innerHTML == "Your typing will appear here.") {
+						tPara.innerHTML = "";
+					}
+					if(tArea.value.indexOf("[TAB]") < 0) {
+						queue.push(tArea.value.substring(0,1));
+					} else {
+						queue.push(tArea.value.substring(0,1));
+						queue.push(tArea.value.substring(1,2));
+						queue.push(tArea.value.substring(2,3));
+						queue.push(tArea.value.substring(3,4));
+						queue.push(tArea.value.substring(4,5));
+					}
+					//console.log(tArea.value);
+					if(tArea.value.length == 1) {
+						tArea.value = "";
+					} else if(tArea.value.indexOf("[TAB]") < 0){
+						tArea.value = tArea.value.substring(1);
+					} else {
+						tArea.value = tArea.value.substring(5);
+					}
+				}	
+			}
+			
+			var interval = setInterval(function() {
+				if(queue.length > 0 && updateFinished && tPara.innerHTML != "Your typing will appear here.") {
+					//console.log("ran");
+					updateFinished = false;
+					var one = queue.shift();
+					//console.log(one + "," + queue.length);
+					if(subCount < subLessons.length) {
+						if(one == subLessons[subCount].charAt(position).toString()) {
+							position += 1;
+							tPara.innerHTML = tPara.innerHTML + one;
+							//var length = tPara.innerHTML.length;
+							//if(length >= subLessons[subCount].length) {
+								//load();
+							//}	
+						}
+					}
+					else {
+						var counter = subCount - subLessons.length;
+						position += 1;
+						tPara.innerHTML = tPara.innerHTML + one;
+						//var length = tPara.innerHTML.length;
+						//if(length >= buildskill[counter].length || (tPara.innerHTML.substring(length-2) == buildskill[counter].substring(buildskill[counter].length-2)  && length >= buildskill[counter].length-2)) {
+							//load();
+						//}	
+					}
+					updateFinished = true;
+				}
+			}, 100);			
+			
+			$(document).ready(function() {
+				document.getElementById("theirTyping").focus();
+			   	$(document).on("click", function(){
+					//console.log("set");
+				    document.getElementById("theirTyping").focus();
+				});
+			});
+		</script>
+	</body>
+</html>

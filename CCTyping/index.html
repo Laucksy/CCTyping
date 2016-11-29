@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Loading</title>
+		<style>
+			html, body {
+				width:100%;
+				height:100%;
+				overflow:hidden;
+			}
+			#pic {
+				position:absolute;
+				overflow:hidden;
+				vertical-align:middle;
+				height:100%;
+			}
+		</style>
+	</head>
+	<body bgcolor="white">
+		<div style="width:100%;height:100%;overflow:hidden;">
+			<img src="launch.jpg" id="pic">	
+		</div>
+		
+		<script>
+			var image = document.getElementById("pic");
+			console.log(window.innerHeight);
+			image.style.width = (window.innerWidth) + "px";
+
+			var count = 0;
+			timer = setInterval(function() {
+				count++;
+				if(count >= 3) {
+					change();
+				}
+			}, 1000);
+		
+			function change() {
+				clearInterval(timer);
+				window.location = "login.html";
+			}
+		</script>
+	</body>
+</html>

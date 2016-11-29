@@ -1,0 +1,222 @@
+<html>
+	<head>
+		<title>Login</title>
+		<script src="//www.parsecdn.com/js/parse-1.6.12.min.js"></script>
+		<script>Parse.initialize("iWCInI89F99p3XseHQ1fllKeNQyTQA6KT57o38lf", "UNIC0gr6yp3K7xlX4z52Doe5dh0j0dzaJpKqwGqG");</script>
+		<link rel="stylesheet" href="theme.css">
+		<style>
+			#blanket {
+			   background-color:#111111 !important;
+			   opacity: 0.90 !important;
+			   position:absolute !important;
+			   z-index: 100 !important;
+			   top:0px !important;
+			   left:0px !important;
+			   width:100% !important;
+			}
+			#upper {
+				position:absolute !important;
+				height:70% !important;
+				width:100% !important;
+				z-index:101 !important;
+			}
+		</style>
+	</head>
+	
+	<body>
+		<div id="holder2" style="width:100%;display:inline;overflow-y:hidden;overflow-x:hidden;height:100%;min-height:100%;background-color:#4A4A4A;">
+			<div id="content" style="position:absolute;overflow-y:auto;overflow-x:hidden;width:102%;height:100%;">
+				<div id="lower" style="position:absolute;z-index:1;height:100%;width:100%;">
+					<div style="width:50%;height:100%;float:left;">
+						<p>Username:</p>
+						<textarea style="height:10%;resize:none;width:50%;" rows="1" cols="30" placeholder=" " maxlength="30" id="usernameText1"></textarea>
+						<p>Password:</p>
+						<textarea style="height:10%;resize:none;width:50%;" rows="1" cols="30" placeholder=" " maxlength="30" id="passwordText1" onkeyup="hideText()"></textarea>
+						<br>
+						<input type="button" onclick="login()" value="Login">
+					</div>
+					<div style="width:50%;height:100%;float:right;">
+						<p>Username:</p>
+						<textarea style="height:10%;resize:none;width:50%;" rows="1" cols="30" placeholder=" " maxlength="30" id="usernameText2"></textarea>
+						<p>Password:</p>
+						<textarea style="height:10%;resize:none;width:50%;" rows="1" cols="30" placeholder=" " maxlength="30" id="passwordText2"></textarea>
+						<p>Full Name:</p>
+						<textarea style="height:10%;resize:none;width:50%;" rows="1" cols="30" placeholder=" " maxlength="30" id="nameText"></textarea>
+						<br>
+						<input type="button" onclick="signup()" value="Sign Up">
+					</div>
+				</div>
+			</div>
+			<div id="blanket" style="display:none;"></div>
+			<div id="upper" style="display:none;text-align:center;overflow:hidden;vertical-align:middle;">
+				<span style="height:10%;font-size:3vh;padding:0;text-align:center;margin:0;">Pick your class:</span>
+				<div style="width:100%;padding:5px;height:30%;">
+					<select id="dateSelect" style="width:100%;display:inline;font-size:3vh;"></select>
+				</div>
+				<div onclick="ok()" style="width:50%;float:right;display:table;text-align:center;"><span>Add</span></div>
+			</div>
+		</div>
+		
+		
+		<script>
+			var username = "";
+			var password = "";
+			var name = "";
+			var className = "";
+			var select;
+			var cumulativePassword = "";
+		
+			document.getElementById("passwordText1").addEventListener("keydown", function (e) {
+			    if (e.keyCode === 13) {  //checks whether the pressed key is "Enter"
+			        if(document.getElementById("passwordText1").value.length > 0 && document.getElementById("usernameText1").value.length > 0)
+			        	login();
+			        else if(document.getElementById("passwordText2").value.length > 0 && document.getElementById("usernameText2").value.length > 0)
+			        	signup();
+			    }
+			});
+			document.getElementById("passwordText2").addEventListener("keydown", function (e) {
+			    if (e.keyCode === 13) {  //checks whether the pressed key is "Enter"
+			        if(document.getElementById("passwordText1").value.length > 0 && document.getElementById("usernameText1").value.length > 0)
+			        	login();
+			        else if(document.getElementById("passwordText2").value.length > 0 && document.getElementById("usernameText2").value.length > 0)
+			        	signup();
+			    }
+			});
+			document.getElementById("usernameText1").addEventListener("keydown", function (e) {
+			    if (e.keyCode === 13) {  //checks whether the pressed key is "Enter"
+			        if(document.getElementById("passwordText1").value.length > 0 && document.getElementById("usernameText1").value.length > 0)
+			        	login();
+			        else if(document.getElementById("passwordText2").value.length > 0 && document.getElementById("usernameText2").value.length > 0)
+			        	signup();
+			    }
+			});
+			document.getElementById("usernameText2").addEventListener("keydown", function (e) {
+			    if (e.keyCode === 13) {  //checks whether the pressed key is "Enter"
+			        if(document.getElementById("passwordText1").value.length > 0 && document.getElementById("usernameText1").value.length > 0)
+			        	login();
+			        else if(document.getElementById("passwordText2").value.length > 0 && document.getElementById("usernameText2").value.length > 0)
+			        	signup();
+			    }
+			});
+			document.getElementById("nameText").addEventListener("keydown", function (e) {
+			    if (e.keyCode === 13) {  //checks whether the pressed key is "Enter"
+			        if(document.getElementById("passwordText1").value.length > 0 && document.getElementById("usernameText1").value.length > 0)
+			        	login();
+			        else if(document.getElementById("passwordText2").value.length > 0 && document.getElementById("usernameText2").value.length > 0)
+			        	signup();
+			    }
+			});	
+				
+			function login() {
+				var username = document.getElementById("usernameText1").value;
+				var password = cumulativePassword;
+				
+				var students = Parse.Object.extend("Students");
+				var query = new Parse.Query(students);
+				query.limit(1000);
+				query.find().then(function(results) {
+					for(i = 0; i < results.length; i++) {
+						if(results[i].get("username") == username && results[i].get("password") == password) {
+							alert("Welcome to CC Typing!");
+							if(results[i].get("Permission") == 0) {
+								localStorage.setItem("isTeacher", "false");
+								localStorage.setItem("cID", results[i].get("ClassID"));
+							} else {
+								localStorage.setItem("isTeacher", "true");
+								localStorage.setItem("cID", results[i].get("ClassID"));
+								console.log("teacher");
+							}
+							localStorage.setItem("username", username);
+							window.location = "home.html";
+							return;
+						}
+					}
+					alert("Username or password is incorrect.");
+					cumulativePassword = "";
+					document.getElementById("passwordText1").value = "";
+				});	
+			}
+			
+			function signup() {
+				username = document.getElementById("usernameText2").value;
+				password = document.getElementById("passwordText2").value;
+				name = document.getElementById("nameText").value;
+				
+				console.log(username + "," + password + ","+ name);
+				if(username.length <= 1 && password.length <= 1) {
+					alert("Please enter a valid username and password.");
+					return;
+				}
+				
+				var students = Parse.Object.extend("Students");
+				var query = new Parse.Query(students);
+				query.limit(1000);
+				query.find().then(function(results) {
+					for(i = 0; i < results.length; i++) {
+						if(results[i].get("username") == username) {
+							alert("This username is already taken. Please pick a new one.");
+							return;
+						}
+					}
+				});				
+				
+				select = document.getElementById("dateSelect");
+				students = Parse.Object.extend("Classes");
+				query = new Parse.Query(students);
+				query.limit(1000);
+				query.find().then(function(results) {
+					for(i = 0; i < results.length; i++) {
+						var option = document.createElement("option");
+						option.innerHTML = results[i].get("Teacher") + " " + results[i].get("Class") + " - Period " + results[i].get("Period") + " - Semester " + results[i].get("Semester");
+						option.value = results[i].id;
+						select.appendChild(option);
+					}
+					document.getElementById("blanket").style.display = "block";
+					document.getElementById("blanket").style.height = window.innerHeight + "px";
+					document.getElementById("upper").style.display = "block";
+				});
+			}
+			
+			function ok() {
+				if(select.value.toString().length > 0) {
+					className = select.value.toString();
+					var progress = "";
+					for(i = 0; i < 39; i++) {
+						progress = progress + "0,0,0::";
+					}
+					progress = progress + "0,0,0";
+					var students = Parse.Object.extend("Students");
+					var user = new students();
+					user.set("username", username);
+					user.set("password", password);
+					user.set("Name", name);
+					user.set("ClassID", className);
+					user.set("Permission", 0);
+					user.set("Progress", progress);
+					user.set("TimedWritings", "0,0::0,0");
+					
+					user.save().then(function(user) {
+						alert("You have successfully signed up! Welcome to CC Typing!");
+						localStorage.setItem("isTeacher", "false");
+						localStorage.setItem("firstLogin", "true");
+						localStorage.setItem("TimedWriting", "wopauESCMV");
+						localStorage.setItem("username", username);
+						localStorage.setItem("cID", className);
+						window.location = "home.html";
+					}, function(user, error) {
+						console.log(error.message);
+					});
+				}
+			}
+		
+			function hideText() {
+				console.log("ran");
+				var text = document.getElementById("passwordText1").value;
+				if(text.length > 0 && text.indexOf("\n") < 0) {
+					cumulativePassword = cumulativePassword + text.substring(text.length-1);
+					document.getElementById("passwordText1").value = text.substring(0,text.length-1) + "*";
+				}
+			}
+		</script>
+	</body>
+</html>
